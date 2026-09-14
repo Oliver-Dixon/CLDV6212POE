@@ -1,0 +1,910 @@
+{
+  "info": {
+    "_postman_id": "6d556933-e5dd-4024-b8e8-5564fbcffb32",
+    "name": "CoffeeNChill API",
+    "description": "CLDV6212 Part 1 — CoffeeNChill Canteen Management System.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "58223949"
+  },
+  "item": [
+    {
+      "name": "01 - Menu Management",
+      "item": [
+        {
+          "name": "Create Menu Item (valid)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Returns the created entity\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"partitionKey\");",
+                  "    pm.expect(body).to.have.property(\"rowKey\");",
+                  "    pm.expect(body.name).to.eql(\"Iced Latte\");",
+                  "    pm.expect(body.price).to.be.above(0);",
+                  "});",
+                  "",
+                  "pm.test(\"Location header points at the new resource\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Location\")).to.include(\"COL-001\");",
+                  "});",
+                  "",
+                  "pm.test(\"Responds in under 2 seconds\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});",
+                  "",
+                  "// Chain the identifiers into the requests that follow",
+                  "const created = pm.response.json();",
+                  "pm.environment.set(\"category\", created.partitionKey);",
+                  "pm.environment.set(\"sku\", created.rowKey);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"category\": \"Cold Drinks\",\n    \"sku\": \"COL-001\",\n    \"name\": \"Iced Latte\",\n    \"description\": \"Double shot over ice with cold milk\",\n    \"price\": 38.00,\n    \"isAvailable\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/menu",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "menu"
+              ]
+            },
+            "description": "Inserts a new entity into the MenuItems table. Category becomes the PartitionKey, SKU becomes the RowKey."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Menu Item (invalid SKU) - 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Returns structured validation errors\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"error\");",
+                  "    pm.expect(body.details).to.be.an(\"array\").that.is.not.empty;",
+                  "});",
+                  "",
+                  "pm.test(\"Error names the SKU rule\", function () {",
+                  "    const body = pm.response.json();",
+                  "    const joined = body.details.join(\" \");",
+                  "    pm.expect(joined.toLowerCase()).to.include(\"sku\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"category\": \"Cold Drinks\",\n    \"sku\": \"bad-sku\",\n    \"name\": \"Malformed SKU Test\",\n    \"description\": \"SKU does not match the AAA-000 pattern\",\n    \"price\": 25.00,\n    \"isAvailable\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/menu",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "menu"
+              ]
+            },
+            "description": "SKU must be three capitals, a hyphen, then three digits. This payload should be rejected by the data annotation validator."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Menu Item (missing name) - 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Validation failure is reported\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.error).to.include(\"Validation\");",
+                  "    pm.expect(body.details).to.be.an(\"array\").that.is.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"category\": \"Cold Drinks\",\n    \"sku\": \"COL-099\",\n    \"description\": \"No name supplied\",\n    \"price\": 25.00,\n    \"isAvailable\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/menu",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "menu"
+              ]
+            },
+            "description": "Name is a required field. Omitting it should produce a 400 with the specific rule that failed."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Menu Item (duplicate) - 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 409 Conflict\", function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});",
+                  "",
+                  "pm.test(\"Error identifies the duplicate SKU\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.error).to.include(\"COL-001\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"category\": \"Cold Drinks\",\n    \"sku\": \"COL-001\",\n    \"name\": \"Iced Latte\",\n    \"description\": \"Same PartitionKey and RowKey as the item created above\",\n    \"price\": 38.00,\n    \"isAvailable\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/menu",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "menu"
+              ]
+            },
+            "description": "PartitionKey + RowKey form the primary key, so re-inserting the same pair must be rejected."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Menu Items",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Returns an array of entities\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.be.an(\"array\");",
+                  "    pm.expect(body.length).to.be.above(0);",
+                  "});",
+                  "",
+                  "pm.test(\"Entities carry the expected shape\", function () {",
+                  "    const first = pm.response.json()[0];",
+                  "    pm.expect(first).to.have.property(\"partitionKey\");",
+                  "    pm.expect(first).to.have.property(\"rowKey\");",
+                  "    pm.expect(first).to.have.property(\"name\");",
+                  "    pm.expect(first).to.have.property(\"price\");",
+                  "    pm.expect(first).to.have.property(\"isAvailable\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/menu",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "menu"
+              ]
+            },
+            "description": "Full table scan returning every menu entity."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Menu Items By Category (valid)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Every item belongs to the requested partition\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.be.an(\"array\").that.is.not.empty;",
+                  "    body.forEach(function (item) {",
+                  "        pm.expect(item.partitionKey).to.eql(\"Hot Drinks\");",
+                  "    });",
+                  "});",
+                  "",
+                  "pm.test(\"Other categories are excluded\", function () {",
+                  "    const names = pm.response.json().map(function (i) { return i.partitionKey; });",
+                  "    pm.expect(names).to.not.include(\"Pastries\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/menu/category/Hot Drinks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "menu",
+                "category",
+                "Hot Drinks"
+              ]
+            },
+            "description": "Single-partition query filtered on PartitionKey — the fastest read Table Storage offers."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Menu Items By Category (nonexistent) - 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404 Not Found\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Error names the missing category\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.error).to.include(\"Sandwiches\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/menu/category/Sandwiches",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "menu",
+                "category",
+                "Sandwiches"
+              ]
+            },
+            "description": "An empty partition returns 404 with a descriptive message rather than an empty array."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Menu Item (valid)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Price was updated\", function () {",
+                  "    pm.expect(pm.response.json().price).to.eql(42);",
+                  "});",
+                  "",
+                  "pm.test(\"Availability was updated\", function () {",
+                  "    pm.expect(pm.response.json().isAvailable).to.eql(false);",
+                  "});",
+                  "",
+                  "pm.test(\"Untouched fields are preserved\", function () {",
+                  "    pm.expect(pm.response.json().name).to.eql(\"Iced Latte\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"price\": 42.00,\n    \"isAvailable\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/menu/{{category}}/{{sku}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "menu",
+                "{{category}}",
+                "{{sku}}"
+              ]
+            },
+            "description": "Partial update — only the supplied fields are overwritten, the rest are preserved."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Menu Item (nonexistent) - 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404 Not Found\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Error names the missing SKU\", function () {",
+                  "    pm.expect(pm.response.json().error).to.include(\"XXX-999\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"price\": 10.00,\n    \"isAvailable\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/menu/Cold Drinks/XXX-999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "menu",
+                "Cold Drinks",
+                "XXX-999"
+              ]
+            },
+            "description": "Updating a RowKey that does not exist returns 404 rather than silently creating it."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Menu Item (invalid price) - 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Price rule is reported\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.details).to.be.an(\"array\").that.is.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"price\": -5.00\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/menu/{{category}}/{{sku}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "menu",
+                "{{category}}",
+                "{{sku}}"
+              ]
+            },
+            "description": "Price must be greater than zero. A negative value should fail validation before touching storage."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Menu Item",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Confirmation message returned\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"message\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/menu/{{category}}/{{sku}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "menu",
+                "{{category}}",
+                "{{sku}}"
+              ]
+            },
+            "description": "Removes the entity created at the start of this folder."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Menu Item (already removed) - 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404 Not Found\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Error explains what is missing\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"error\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/menu/{{category}}/{{sku}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "menu",
+                "{{category}}",
+                "{{sku}}"
+              ]
+            },
+            "description": "Deleting the same entity twice returns 404 rather than reporting a false success."
+          },
+          "response": []
+        }
+      ],
+      "description": "CRUD operations against the MenuItems table. PartitionKey is the category, RowKey is the SKU."
+    },
+    {
+      "name": "02 - Staff Documents",
+      "item": [
+        {
+          "name": "Upload Document (valid PDF)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Metadata is returned\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"fileName\");",
+                  "    pm.expect(body).to.have.property(\"sizeBytes\");",
+                  "    pm.expect(body).to.have.property(\"lastModified\");",
+                  "    pm.expect(body.contentType).to.eql(\"application/pdf\");",
+                  "});",
+                  "",
+                  "pm.test(\"Reported size is greater than zero\", function () {",
+                  "    pm.expect(pm.response.json().sizeBytes).to.be.above(0);",
+                  "});",
+                  "",
+                  "const uploaded = pm.response.json();",
+                  "pm.environment.set(\"fileName\", uploaded.fileName);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/C:/dev/CLDV6212POE/staff-documents.pdf"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/documents/upload",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documents",
+                "upload"
+              ]
+            },
+            "description": "Multipart upload streamed directly into staff-docs. ATTACH A PDF before sending — exported collections cannot carry the file itself."
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Document (wrong content type) - 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error explains multipart is required\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.error.toLowerCase()).to.include(\"multipart\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"note\": \"A JSON body is not a multipart file upload\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/documents/upload",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documents",
+                "upload"
+              ]
+            },
+            "description": "The upload endpoint requires multipart/form-data. A JSON body should be rejected with a clear message."
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Document (blocked MIME type) - 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Allowed types are listed back to the caller\", function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property(\"allowed\");",
+                  "    pm.expect(body.allowed).to.be.an(\"array\").that.is.not.empty;",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/C:/dev/CLDV6212POE/barista-info.txt"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/documents/upload",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documents",
+                "upload"
+              ]
+            },
+            "description": "Only PDF, PNG, JPEG and Word documents are accepted. ATTACH A .txt FILE before sending."
+          },
+          "response": []
+        },
+        {
+          "name": "List Staff Documents",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Returns an array\", function () {",
+                  "    pm.expect(pm.response.json()).to.be.an(\"array\");",
+                  "});",
+                  "",
+                  "pm.test(\"Each document reports name, size and last modified\", function () {",
+                  "    const body = pm.response.json();",
+                  "    if (body.length > 0) {",
+                  "        pm.expect(body[0]).to.have.property(\"fileName\");",
+                  "        pm.expect(body[0]).to.have.property(\"sizeBytes\");",
+                  "        pm.expect(body[0]).to.have.property(\"sizeDisplay\");",
+                  "        pm.expect(body[0]).to.have.property(\"lastModified\");",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/documents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documents"
+              ]
+            },
+            "description": "Lists every stored operational document with file name, size and last modified date."
+          },
+          "response": []
+        },
+        {
+          "name": "Download Staff Document (valid)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Type is application/pdf\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"pdf\");",
+                  "});",
+                  "",
+                  "pm.test(\"Body is not empty\", function () {",
+                  "    pm.expect(pm.response.responseSize).to.be.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/documents/download/{{fileName}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documents",
+                "download",
+                "{{fileName}}"
+              ]
+            },
+            "description": "Streams the stored file back to the client without buffering it fully in memory."
+          },
+          "response": []
+        },
+        {
+          "name": "Download Staff Document (missing) - 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 404 Not Found\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Error names the missing document\", function () {",
+                  "    pm.expect(pm.response.json().error).to.include(\"does-not-exist.pdf\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/documents/download/does-not-exist.pdf",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documents",
+                "download",
+                "does-not-exist.pdf"
+              ]
+            },
+            "description": "Requesting a file that is not in staff-docs returns 404 with a descriptive message."
+          },
+          "response": []
+        }
+      ],
+      "description": "Upload, listing and retrieval of operational documents in the staff-docs store."
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Fail fast with a clear message if the environment was not selected.",
+          "if (!pm.environment.get(\"baseUrl\")) {",
+          "    throw new Error(\"Select the CoffeeNChill-Local environment before running this collection.\");",
+          "}"
+        ]
+      }
+    }
+  ]
+}
