@@ -1,0 +1,17 @@
+@baseUrl = http://localhost:7071/api
+
+### Get all menu items
+GET {{baseUrl}}/menu
+
+### Create a menu item
+POST {{baseUrl}}/menu
+Content-Type: application/json
+
+{
+  "category": "Hot Drinks",
+  "sku": "COF-003",
+  "name": "Flat White",
+  "description": "Double shot, steamed milk",
+  "price": 36.00,
+  "isAvailable": true
+}

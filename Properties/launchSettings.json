@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "CLDV6212POE": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7004",
+      "launchBrowser": false
+    }
+  }
+}
