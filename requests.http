@@ -35,11 +35,25 @@ Content-Type: application/json
   "price": 10.00
 }
 
-### Get all — should return 4 items
-GET {{baseUrl}}/menu
+### Update price — should return 200
+PUT {{baseUrl}}/menu/Cold Drinks/COL-001
+Content-Type: application/json
 
-### Filter — should return 2
-GET {{baseUrl}}/menu/category/Hot Drinks
+{
+  "price": 42.00,
+  "isAvailable": false
+}
 
-### Unknown category — should return 404
-GET {{baseUrl}}/menu/category/Sandwiches
+### Update nonexistent — should return 404
+PUT {{baseUrl}}/menu/Cold Drinks/XXX-999
+Content-Type: application/json
+
+{
+  "price": 10.00
+}
+
+### Delete — should return 200
+DELETE {{baseUrl}}/menu/Cold Drinks/COL-001
+
+### Delete again — should return 404
+DELETE {{baseUrl}}/menu/Cold Drinks/COL-001
