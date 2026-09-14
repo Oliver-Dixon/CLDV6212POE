@@ -1,0 +1,11 @@
+bin/
+obj/
+.vs/
+.vscode/
+local.settings.json
+**/.git
+**/.gitignore
+Dockerfile
+.dockerignore
+requests.http
+README.md

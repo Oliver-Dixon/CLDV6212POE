@@ -1,6 +1,6 @@
 @baseUrl = http://localhost:7071/api
 
-### Create — should return 201
+### Create — expect 201
 POST {{baseUrl}}/menu
 Content-Type: application/json
 
@@ -13,7 +13,18 @@ Content-Type: application/json
   "isAvailable": true
 }
 
-### Duplicate — should return 409
+### Invalid SKU — expect 400
+POST {{baseUrl}}/menu
+Content-Type: application/json
+
+{
+  "category": "Cold Drinks",
+  "sku": "bad-sku",
+  "name": "Test Item",
+  "price": 10.00
+}
+
+### Duplicate — expect 409
 POST {{baseUrl}}/menu
 Content-Type: application/json
 
@@ -24,18 +35,7 @@ Content-Type: application/json
   "price": 38.00
 }
 
-### Invalid SKU — should return 400
-POST {{baseUrl}}/menu
-Content-Type: application/json
-
-{
-  "category": "Cold Drinks",
-  "sku": "bad-sku",
-  "name": "Test",
-  "price": 10.00
-}
-
-### Update price — should return 200
+### Update — expect 200
 PUT {{baseUrl}}/menu/Cold Drinks/COL-001
 Content-Type: application/json
 
@@ -44,7 +44,7 @@ Content-Type: application/json
   "isAvailable": false
 }
 
-### Update nonexistent — should return 404
+### Update missing — expect 404
 PUT {{baseUrl}}/menu/Cold Drinks/XXX-999
 Content-Type: application/json
 
@@ -52,8 +52,8 @@ Content-Type: application/json
   "price": 10.00
 }
 
-### Delete — should return 200
+### Delete — expect 200
 DELETE {{baseUrl}}/menu/Cold Drinks/COL-001
 
-### Delete again — should return 404
+### Delete again — expect 404
 DELETE {{baseUrl}}/menu/Cold Drinks/COL-001
