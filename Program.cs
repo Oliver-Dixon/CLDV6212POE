@@ -17,7 +17,7 @@ var builder = new HostBuilder()
         services.AddSingleton(new BlobServiceClient(conn));
 
         services.AddSingleton<IMenuService, MenuService>();
-        services.AddSingleton<IDocumentService, BlobDocumentService>();
+        //services.AddSingleton<IDocumentService, BlobDocumentService>();
     })
     .Build();
 

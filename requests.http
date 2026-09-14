@@ -1,17 +1,45 @@
 @baseUrl = http://localhost:7071/api
 
-### Get all menu items
-GET {{baseUrl}}/menu
-
-### Create a menu item
+### Create — should return 201
 POST {{baseUrl}}/menu
 Content-Type: application/json
 
 {
-  "category": "Hot Drinks",
-  "sku": "COF-003",
-  "name": "Flat White",
-  "description": "Double shot, steamed milk",
-  "price": 36.00,
+  "category": "Cold Drinks",
+  "sku": "COL-001",
+  "name": "Iced Latte",
+  "description": "Double shot over ice",
+  "price": 38.00,
   "isAvailable": true
 }
+
+### Duplicate — should return 409
+POST {{baseUrl}}/menu
+Content-Type: application/json
+
+{
+  "category": "Cold Drinks",
+  "sku": "COL-001",
+  "name": "Iced Latte",
+  "price": 38.00
+}
+
+### Invalid SKU — should return 400
+POST {{baseUrl}}/menu
+Content-Type: application/json
+
+{
+  "category": "Cold Drinks",
+  "sku": "bad-sku",
+  "name": "Test",
+  "price": 10.00
+}
+
+### Get all — should return 4 items
+GET {{baseUrl}}/menu
+
+### Filter — should return 2
+GET {{baseUrl}}/menu/category/Hot Drinks
+
+### Unknown category — should return 404
+GET {{baseUrl}}/menu/category/Sandwiches
