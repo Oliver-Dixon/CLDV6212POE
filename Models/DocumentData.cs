@@ -1,6 +1,6 @@
 namespace CoffeeNChill.Functions.Models;
 
-public class DocumentData
+public class DocumentMetadata
 {
     public string FileName { get; set; } = default!;
     public long SizeBytes { get; set; }
