@@ -18,6 +18,7 @@ var builder = new HostBuilder()
 
         services.AddSingleton<IMenuService, MenuService>();
         services.AddSingleton<IDocumentService, BlobDocumentService>();
+        services.AddSingleton<IQueueService, QueueService>();
     })
     .Build();
 
