@@ -13,14 +13,19 @@ namespace CoffeeNChill.Functions.Functions;
 public class OrderFunctions
 {
     private readonly IQueueService _queue;
+    private readonly IOrderService _orders;
     private readonly ILogger<OrderFunctions> _log;
 
     private static readonly JsonSerializerOptions JsonOpts =
         new() { PropertyNameCaseInsensitive = true };
 
-    public OrderFunctions(IQueueService queue, ILogger<OrderFunctions> log)
+    public OrderFunctions(
+        IQueueService queue,
+        IOrderService orders,                         
+        ILogger<OrderFunctions> log)
     {
         _queue = queue;
+        _orders = orders;                             
         _log = log;
     }
 
@@ -92,4 +97,9 @@ public class OrderFunctions
             { StatusCode = 503 };
         }
     }
+        // GET /api/orders
+    [Function("GetAllOrders")]
+    public async Task<IActionResult> GetAll(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "orders")] HttpRequest req)
+        => new OkObjectResult(await _orders.GetAllAsync());
 }
