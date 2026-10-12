@@ -891,6 +891,251 @@
         }
       ],
       "description": "Upload, listing and retrieval of operational documents in the staff-docs store."
+    },
+    {
+      "name": "03 - Order Processing",
+      "item": [
+        {
+          "name": "Place Order (valid)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 202 Accepted\", function () {\r",
+                  "    pm.response.to.have.status(202);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Returns OrderId and MessageId\", function () {\r",
+                  "    const body = pm.response.json();\r",
+                  "    pm.expect(body).to.have.property(\"orderId\");\r",
+                  "    pm.expect(body).to.have.property(\"messageId\");\r",
+                  "    pm.expect(body.status).to.eql(\"Queued\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.environment.set(\"orderId\", pm.response.json().orderId);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"customerName\": \"Jane Smith\",\r\n  \"selectedItemSKUs\": [\"COF-001\", \"PAS-104\"],\r\n  \"totalPrice\": 65.00\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders/queue",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "queue"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Place Order (negative price)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 400 Bad Request\", function () {\r",
+                  "    pm.response.to.have.status(400);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Returns validation details\", function () {\r",
+                  "    const body = pm.response.json();\r",
+                  "    pm.expect(body.error).to.include(\"Validation\");\r",
+                  "    pm.expect(body.details).to.be.an(\"array\").that.is.not.empty;\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"customerName\": \"Jane Smith\",\r\n  \"selectedItemSKUs\": [\"COF-001\"],\r\n  \"totalPrice\": -15.00\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders/queue",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "queue"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Place Order (empty SKU list)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 400 Bad Request\", function () {\r",
+                  "    pm.response.to.have.status(400);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Returns validation details\", function () {\r",
+                  "    const body = pm.response.json();\r",
+                  "    pm.expect(body.error).to.include(\"Validation\");\r",
+                  "    pm.expect(body.details).to.be.an(\"array\").that.is.not.empty;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"customerName\": \"Jane Smith\",\r\n  \"selectedItemSKUs\": [],\r\n  \"totalPrice\": 30.00\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders/queue",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "queue"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Place Order (no customer name)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 400 Bad Request\", function () {\r",
+                  "    pm.response.to.have.status(400);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Returns validation details\", function () {\r",
+                  "    const body = pm.response.json();\r",
+                  "    pm.expect(body.error).to.include(\"Validation\");\r",
+                  "    pm.expect(body.details).to.be.an(\"array\").that.is.not.empty;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"selectedItemSKUs\": [\"COF-001\"],\r\n  \"totalPrice\": 30.00\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders/queue",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "queue"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Orders",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"The queued order reached the Orders table\", function () {\r",
+                  "    const orders = pm.response.json();\r",
+                  "    const mine = orders.find(o => o.rowKey === pm.environment.get(\"orderId\"));\r",
+                  "    pm.expect(mine, \"order should exist in the table\").to.not.be.undefined;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Order carries a lifecycle status\", function () {\r",
+                  "    const orders = pm.response.json();\r",
+                  "    const mine = orders.find(o => o.rowKey === pm.environment.get(\"orderId\"));\r",
+                  "    pm.expect([\"Received\", \"Preparing\", \"Ready\", \"Collected\"]).to.include(mine.status);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "event": [
