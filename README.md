@@ -34,3 +34,25 @@ Docker Hub links
 
 https://hub.docker.com/r/st10438499/coffeenchill-functions 
 https://hub.docker.com/r/st10438499/coffeechill-azurite
+
+Changelog
+
+Part 2 — Queue Triggers and Docker Compose
+
+Added an Azure Storage Queue called order-processing-queue. Orders are no
+longer processed while the customer waits. The POST /api/orders/queue
+endpoint validates the order, serializes it to JSON, pushes it onto the
+queue and returns 202 Accepted immediately.
+
+A background function called ProcessOrderQueue is triggered automatically
+whenever a message arrives. It parses the JSON, writes the order into an
+Orders table using the order date as PartitionKey and the OrderId as
+RowKey, then advances the status through Received, Preparing, Ready and
+Collected. If a message cannot be processed it is retried five times and
+then moved to order-processing-queue-poison, which is logged.
+
+Added docker-compose.yml which starts Azurite and the Functions host
+together with one command. It pulls the application image directly from
+Docker Hub rather than building locally, uses a custom bridge network so
+the containers reach each other by service name, and uses a named volume
+so storage data survives a restart.
