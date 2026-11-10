@@ -62,6 +62,7 @@ public class OrderFunctions
             var context = new ValidationContext(dto);
             var results = new List<ValidationResult>();
 
+            // Validate the request body using data annotations.
             if (!Validator.TryValidateObject(dto, context, results, true))
                 return new BadRequestObjectResult(new
                 {
@@ -78,6 +79,7 @@ public class OrderFunctions
                 OrderTimestamp = DateTimeOffset.UtcNow
             };
 
+            
             var messageId = await _queue.EnqueueOrderAsync(order);
 
             // 202 Accepted — the work has not been done yet, only accepted.

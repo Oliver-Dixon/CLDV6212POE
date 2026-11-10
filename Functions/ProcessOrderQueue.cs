@@ -20,6 +20,7 @@ public class ProcessOrderQueue
         _log = log;
     }
 
+    // This function is triggered by messages in the order-processing-queue.
     [Function("ProcessOrderQueue")]
     public async Task Run(
         [QueueTrigger("order-processing-queue", Connection = "AzureWebJobsStorage")]
@@ -32,9 +33,11 @@ public class ProcessOrderQueue
         {
             order = JsonSerializer.Deserialize<OrderMessage>(message, JsonOpts);
         }
+        
+        // If the message is malformed, we throw an exception so the runtime retries it.
         catch (JsonException ex)
         {
-            // Rethrow so the runtime retries, then moves it to the poison queue.
+            
             _log.LogError(ex,
                 "Malformed queue message could not be parsed. It will be retried and " +
                 "then routed to order-processing-queue-poison. Payload: {Payload}", message);

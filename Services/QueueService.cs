@@ -19,9 +19,7 @@ public class QueueService : IQueueService
         var name = Environment.GetEnvironmentVariable("OrderQueueName")
                    ?? "order-processing-queue";
 
-        // Base64 is essential. The SDK sends plain text by default but the
-        // [QueueTrigger] attribute expects Base64, so without this the
-        // trigger fires and immediately fails to parse the message.
+        // Use Base64 encoding to avoid issues with special characters in JSON.
         _queue = new QueueClient(conn, name, new QueueClientOptions
         {
             MessageEncoding = QueueMessageEncoding.Base64
@@ -32,6 +30,7 @@ public class QueueService : IQueueService
 
     public async Task<string> EnqueueOrderAsync(OrderMessage order)
     {
+        //The order gets turned into JSON and sent.
         var json = JsonSerializer.Serialize(order);
 
         var receipt = await _queue.SendMessageAsync(json);
