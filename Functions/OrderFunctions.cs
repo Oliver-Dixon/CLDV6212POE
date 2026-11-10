@@ -104,4 +104,46 @@ public class OrderFunctions
     public async Task<IActionResult> GetAll(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "orders")] HttpRequest req)
         => new OkObjectResult(await _orders.GetAllAsync());
+
+        // PUT /api/orders/status
+    [Function("UpdateOrderStatus")]
+    public async Task<IActionResult> UpdateStatus(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "orders/status")]
+        HttpRequest req)
+    {
+        var body = await new StreamReader(req.Body).ReadToEndAsync();
+
+        if (string.IsNullOrWhiteSpace(body))
+            return new BadRequestObjectResult(new { error = "Request body is empty." });
+
+        var dto = JsonSerializer.Deserialize<StatusUpdate>(body, JsonOpts);
+
+        if (dto is null || string.IsNullOrWhiteSpace(dto.OrderId)
+            || string.IsNullOrWhiteSpace(dto.OrderDate)
+            || string.IsNullOrWhiteSpace(dto.Status))
+            return new BadRequestObjectResult(
+                new { error = "OrderDate, OrderId and Status are required." });
+
+        var updated = await _orders.UpdateStatusAsync(dto.OrderDate, dto.OrderId, dto.Status);
+
+        if (!updated)
+            return new NotFoundObjectResult(
+                new { error = $"Order '{dto.OrderId}' was not found on {dto.OrderDate}." });
+
+        _log.LogInformation("Order {OrderId} manually set to {Status}", dto.OrderId, dto.Status);
+
+        return new OkObjectResult(new
+        {
+            message = $"Order '{dto.OrderId}' is now {dto.Status}.",
+            orderId = dto.OrderId,
+            status = dto.Status
+        });
+    }
+
+    private class StatusUpdate
+    {
+        public string? OrderDate { get; set; }
+        public string? OrderId { get; set; }
+        public string? Status { get; set; }
+    }
 }

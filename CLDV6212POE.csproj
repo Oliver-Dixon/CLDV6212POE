@@ -30,4 +30,11 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="CoffeeNChill.Api/**" />
+    <Content Remove="CoffeeNChill.Api/**" />
+    <None Remove="CoffeeNChill.Api/**" />
+    <EmbeddedResource Remove="CoffeeNChill.Api/**" />
+  </ItemGroup>
+
 </Project>
