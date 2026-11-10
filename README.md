@@ -56,3 +56,31 @@ together with one command. It pulls the application image directly from
 Docker Hub rather than building locally, uses a custom bridge network so
 the containers reach each other by service name, and uses a named volume
 so storage data survives a restart.
+
+Part 3 — API Gateway, JWT Authentication and VPS Deployment
+
+Added an ASP.NET Core Web API that sits in front of the Functions app. Every
+client request now goes through this gateway, which checks the caller's token
+and role before forwarding to the backend. The Functions app and Azurite are
+no longer reachable from outside the Docker network.
+
+Added user accounts stored in a Users table in Azure Table Storage. The role
+is the PartitionKey and the email address is the RowKey. Passwords are hashed
+with BCrypt and the plaintext is never stored. POST /api/auth/register creates
+an account and POST /api/auth/login returns a signed JWT valid for two hours,
+carrying the user's name, email and role as claims.
+
+Browsing the menu and placing an order stay public. Managing the menu,
+accessing staff documents and updating order statuses require a token with
+the Admin or Staff role. A request with no token gets 401 and a request with
+a valid Customer token gets 403.
+
+Added Swagger UI with XML documentation on every endpoint and documented
+response codes. The Authorize button accepts a JWT so the whole API can be
+tested from the browser.
+
+Added global exception middleware so unhandled errors return consistent JSON
+with a trace ID rather than a stack trace.
+
+The stack runs as three containers on a Vultr Linux server in Johannesburg,
+started with docker compose up -d pulling published v3.0 images from Docker Hub.
