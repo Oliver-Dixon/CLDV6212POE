@@ -1,16 +1,17 @@
 services:
   azurite:
-    image: mcr.microsoft.com/azure-storage/azurite:latest
+    image: st10438499/coffeechill-azurite:v3.0
     container_name: coffeenchill-azurite
     command: "azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --location /data"
-    ports:
-      - "10000:10000"
-      - "10001:10001"
-      - "10002:10002"
+    expose:
+      - "10000"
+      - "10001"
+      - "10002"
     volumes:
       - azurite-data:/data
     networks:
       - coffeenchill-net
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "nc", "-z", "127.0.0.1", "10001"]
       interval: 5s
@@ -18,13 +19,13 @@ services:
       retries: 10
 
   functions:
-    image: st10438499/coffeenchill-functions:v2.0
+    image: st10438499/coffeenchill-functions:v3.0
     container_name: coffeenchill-functions
     depends_on:
       azurite:
         condition: service_healthy
-    ports:
-      - "7071:80"
+    expose:
+      - "80"
     environment:
       AzureWebJobsStorage: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1;"
       MenuTableName: "MenuItems"
@@ -34,6 +35,26 @@ services:
       FUNCTIONS_WORKER_RUNTIME: "dotnet-isolated"
     networks:
       - coffeenchill-net
+    restart: unless-stopped
+
+  api:
+    image: st10438499/coffeenchill-api:v3.0
+    container_name: coffeenchill-api
+    depends_on:
+      - functions
+    ports:
+      - "5000:8080"
+    environment:
+      FunctionsBaseUrl: "http://functions:80"
+      UsersTableName: "Users"
+      AzureWebJobsStorage: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1;"
+      Jwt__Key: "${JWT_KEY}"
+      Jwt__Issuer: "CoffeeNChill"
+      Jwt__Audience: "CoffeeNChillClients"
+      ASPNETCORE_ENVIRONMENT: "Production"
+    networks:
+      - coffeenchill-net
+    restart: unless-stopped
 
 networks:
   coffeenchill-net:

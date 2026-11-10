@@ -266,3 +266,6 @@ __pycache__/
 # Part 3 secrets
 appsettings.Development.json
 .env
+
+.env
+appsettings.Development.json
